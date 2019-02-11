@@ -7,8 +7,8 @@ def main():
 
     #kKeepOpen = cs.VideoSource.ConnectionStrategy.kConnectionKeepOpen
     
-    usb1 = cs.startAutomaticCapture(dev=0)
-    usb2 = cs.startAutomaticCapture(dev=1)
+    usb1 = cs.startAutomaticCapture(name="cam1", path='/dev/v4l/by-id/some-path-here')
+    usb2 = cs.startAutomaticCapture(name="cam2", path='/dev/v4l/by-id/some-other-path-here')
 
     #cs.addServer("Server 1", 1181)
 
