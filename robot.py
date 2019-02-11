@@ -12,8 +12,8 @@ class MyRobot(wpilib.TimedRobot):
     def robotInit(self):
 
         self.sd = NetworkTables.getTable('SmartDashboard')
-        wpilib.CameraServer.launch('vision.py:camSrv1')
-        wpilib.CameraServer.launch('vision.py:camSrv2')
+        wpilib.CameraServer.launch('vision.py:camera1')
+        wpilib.CameraServer.launch('vision.py:camera2')
 
         #Joystick/gamepad setup
         self.stick1 = wpilib.Joystick(1) #Right
