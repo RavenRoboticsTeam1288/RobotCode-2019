@@ -2,7 +2,6 @@ import wpilib
 from wpilib import RobotDrive
 from networktables import NetworkTables
 #from Utilities import UtilityFunctions
-import vision
 
 class MyRobot(wpilib.TimedRobot):
 
