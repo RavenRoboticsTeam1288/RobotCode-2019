@@ -90,7 +90,7 @@ class MyRobot(wpilib.TimedRobot):
         self.robotDrive.mecanumDrive_Cartesian(-stick2_X, -stick2_Y, -stick1_X, 0)
 
         #Ball intake/outtake
-        '''if self.stick2.getRawButton(1):# and not self.limit.get():
+        if self.stick2.getRawButton(1):# and not self.limit.get():
             self.rightFly.set(self.intakeSpeed)
             self.leftFly.set(-self.intakeSpeed)
         elif self.stick1.getRawButton(1):
@@ -98,33 +98,55 @@ class MyRobot(wpilib.TimedRobot):
             self.leftFly.set(-self.spitSpeed)
         else:
             self.rightFly.set(0)
-            self.leftFly.set(0)'''
+            self.leftFly.set(0)
 
         #Arm Elevation
-        if self.gamepad.getRawButton(6): #Up
-            #self.bottomLiftLeft.set(.1)
-            #self.bottomLiftRight.set(-.1)
-            self.topLift.set(-1)
-        elif self.gamepad.getRawButton(5): #Down
-            #self.bottomLiftLeft.set(-.1)
-            #self.bottomLiftRight.set(.1)
-            self.topLift.set(1)
+        if self.gamepad.getRawButton(8): #Up
+            self.bottomLift.set(.1)
+            #self.topLift.set(-1)
+        elif self.gamepad.getRawButton(7): #Down
+            self.bottomLift.set(-.1)
+            #self.topLift.set(1)
         else: #Stop
-            #self.bottomLiftLeft.set(0)
-            #self.bottomLiftRight.set(0)
+            self.bottomLiftLeft.set(0)
+            #self.topLift.set(0)
+
+        #Hook
+        if self.gamepad.getRawButton(5):
+            self.topLift.set(.3)
+        elif self.gamepad.getRawButton(6):
+            self.topLift.set(-.3)
+        else:
             self.topLift.set(0)
-
-        #Hatch servos
-        '''if self.gamepad.getRawButton(*):
-            self.rightServo.setAngle(180) #Extended
-            self.leftServo.setAngle(180) #Extended
-        elif self.gamepad.getRawButton(*):
-            self.rightServo.setAngle(0) #Retracted
-            self.leftServo.setAngle(0) #Retracted'''
-
+        
         #Climbing Controls
         if self.stick1.getRawButton(8):
-            self.climberLeft
+            liftAllNumInches(MyRobot, 6, 1, .1) 
+        elif self.stick1.getRawButton(9):
+            self.climberWheel.set(.1)
+        elif self.stick2.getRawButton(8):
+            liftFrontNumInches(MyRobot, 6, -1, .1)
+        elif self.stick2.getRawButton(9):
+            liftBackNumInches(MyRobot, 6, -1, .1)
+        else:
+            self.climberWheel.set(0)
+
+        if self.stick1.getRawButton(6):
+            liftAllNumInches(MyRobot, 19, 1, .1) 
+        elif self.stick1.getRawButton(5):
+            self.climberWheel.set(.1)
+        elif self.stick2.getRawButton(6):
+            liftFrontNumInches(MyRobot, 19, -1, .1)
+        elif self.stick2.getRawButton(5):
+            liftBackNumInches(MyRobot, 19, -1, .1)
+        else:
+            self.climberWheel.set(0)
+
+
+        #Two modes
+            #if self.gamepad.getRawButton(3):
+            #angle = robot.gyro.getAngle()
+            #angle = angle % 360
 
 
             
