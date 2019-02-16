@@ -18,10 +18,6 @@ class MyRobot(wpilib.TimedRobot):
         self.stick2 = wpilib.Joystick(2) #Left
         self.gamepad = wpilib.Joystick(3) #Operator Controller
 
-        #Servo setup
-        self.rightServo = wpilib.Servo(1) #Right
-        self.leftServo = wpilib.Servo(2) #Left
-
         #Drive Train Motor Setup
         self.rightFrontMotor = wpilib.Talon(7) #Right front
         self.rightBackMotor = wpilib.Talon(6) #Right back
@@ -29,22 +25,18 @@ class MyRobot(wpilib.TimedRobot):
         self.leftBackMotor = wpilib.Talon(9) #Left back
 
         #Ball Fly Wheel Setup
-        #self.rightFly = wpilib.Talon(0) #Right Fly Wheel
-        #self.leftFly = wpilib.Talon(16) #Left Fly Wheel
+        self.rightFly = wpilib.Talon(10) #Right Fly Wheel
+        self.leftFly = wpilib.Talon(16) #Left Fly Wheel
 
         #Arm Elevator Setup
-        #self.bottomLiftRight = wpilib.Talon(0) #Arm Lifter Right
-        #self.bottomLiftLeft = wpilib.Talon(16) #Arm Lifter Left
-        self.topLift = wpilib.Talon(0) #Wrist Lifter
+        self.bottomLiftRight = wpilib.Talon(3) #Arm Lifter Right
+        self.topLift = wpilib.Talon(2) #Wrist Lifte
 
-        #Limit Switch Setup
-        #self.limit = wpilib.DigitalInput(1)
-
-        #Climber Setup
-        #self.climberRight = wpilib.Talon(x)
-        #self.climberLeft = wpilib.Talon(x)
-        #self.climberBack = wpilib.Talon(x)
-        #self.climberWheel = wpilib.Talon(x)
+        #Docker Setup
+        self.climberRight = wpilib.Talon(1)
+        self.climberLeft = wpilib.Talon(12)
+        self.climberBack = wpilib.Talon(17)
+        self.climberWheel = wpilib.Talon(18)
 
 
         #Robot Drive Setup
