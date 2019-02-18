@@ -158,7 +158,7 @@ class UtilityFunctions():
             print("FINISHED DRIVE NUM INCHES")
             return True
 
-    def liftAllNumInches(robot, num, direction, speed):
+    def liftAllNumInches(robot, motors, num, speed):
         UtitlityFunctions.resetEncoderValue(robot,robot.encoder, robot.autoSafeToResetEncoder)
         inches_distance = abs(robot.encoder.get()) *.087 # (100 ticks ~ 10.188 inches)
         if inches_distance < num:
@@ -287,3 +287,27 @@ class UtilityFunctions():
             return False
         else:
             return True
+
+    '''
+    def encoderCompare(robot, encoders, motorMove):
+        for E in encoders:
+            Evalue = E.get()
+            for e in encoders:
+                evalue = e.get()
+                if Evalue - evalue > 0:
+                    motorMove.update(E=False)
+                else:
+                    motorMove.update(E=True)
+            print(motorMove)'''
+
+    def encoderCompare(robot, encoder, encoderList):
+        print(encoder)
+        for e in encoderList:
+            if e != encoder:
+                if encoder.get() - e.get() > 5000:
+                    print("Stop Motor: " + str(e))
+                    return False
+                else:
+                    return True
+
+
