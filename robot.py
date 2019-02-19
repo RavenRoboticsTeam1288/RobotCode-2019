@@ -29,14 +29,15 @@ class MyRobot(wpilib.TimedRobot):
         self.leftFly = wpilib.Talon(11) #Left Fly Wheel
 
         #Arm Elevator Setup
-        self.bottomLift = wpilib.Talon(12) #Arm Lifter Right
-        self.topLift = wpilib.Talon(13) #Wrist Lifter
+        self.armMotor1 = wpilib.Talon(12) #Arm Lifter Bottom
+        self.armMotor2 = wpilib.Talon(14)#Arm Lifter Top
+        self.wristMotor = wpilib.Talon(13) #Wrist Lifter
 
         #Climber Setup
-        #self.climberRight = wpilib.Talon(4)
-        #self.climberLeft = wpilib.Talon(3)
-        #self.climberBack = wpilib.Talon(2)
-        #self.climberWheel = wpilib.Talon(18)
+        self.climberRight = wpilib.Talon(4)
+        self.climberLeft = wpilib.Talon(3)
+        self.climberBack = wpilib.Talon(2)
+        self.climberWheel = wpilib.Talon(18)
 
 
         #Robot Drive Setup
@@ -46,21 +47,23 @@ class MyRobot(wpilib.TimedRobot):
                                             self.rightBackMotor)
 
         #Encoders Setup
-        #self.backEncoder = wpilib.Counter(2)
-        #self.leftEncoder = wpilib.Counter(4)
-        #self.rightEncoder = wpilib.Counter(0)
+        self.backEncoder = wpilib.Counter(2)
+        self.leftEncoder = wpilib.Counter(4)
+        self.rightEncoder = wpilib.Counter(0)
         self.armEncoder = wpilib.Encoder(0, 1)
 
-        #self.backEncoder.reset()
-        #self.leftEncoder.reset()
-        #self.rightEncoder.reset()
+        self.backEncoder.reset()
+        self.leftEncoder.reset()
+        self.rightEncoder.reset()
         self.armEncoder.reset()
 
         #Misc Variables Setup
         self.intakeSpeed = 0.1
         self.spitSpeed = -0.1
-        #self.encoderMotor = {self.backEncoder : self.climberBack, self.rightEncoder : self.climberRight, self.leftEncoder : self.climberLeft}
-        #self.actuatorMove = {self.climberBack : True, self.climberRight : True, self.climberLeft : True}
+        self.armSpeed = 0.1
+        self.wristSpeed = 0.1
+        self.encoderMotor = {self.backEncoder : self.climberBack, self.rightEncoder : self.climberRight, self.leftEncoder : self.climberLeft}
+        self.actuatorMove = {self.climberBack : True, self.climberRight : True, self.climberLeft : True}
         self.armHeight1LowS = 14500
         self.armHeight1HighS = 14600
         self.armHeightLowG = 1800
@@ -69,7 +72,6 @@ class MyRobot(wpilib.TimedRobot):
         self.armHeightLow2 = 23600
         self.armHeightHigh3 = 32700
         self.armHeightLow3 = 32800
-        self.randomMotor = wpilib.Talon(2)
         
         
 
@@ -119,27 +121,28 @@ class MyRobot(wpilib.TimedRobot):
         else:
             self.rightFly.set(0)
             self.leftFly.set(0)
-        '''
+
         #Arm Elevation
         if self.gamepad.getRawButton(8): #Up
-            self.bottomLift.set(.1)
-            #self.topLift.set(-1)
+            self.armMotor1.set(self.armSpeed)
+            self.armMotor2.set(self.armSpeed)
         elif self.gamepad.getRawButton(7): #Down
-            self.bottomLift.set(-.1)
-            #self.topLift.set(1)
-        else: #Stop
-            self.bottomLiftLeft.set(0)
-            #self.topLift.set(0)'''
+            self.armMotor1.set(-self.armSpeed)
+            self.armMotor2.set(-self.armSpeed)
+        elif self.gamepad.getRawButton(8) == False and self.gamepad.getRawButton(7) == False: #Stop
+            self.armMotor1.set(0)
+            self.armMotor2.set(0)
 
-        '''#Hook
+
+        #Hook
         if self.gamepad.getRawButton(5):
-            self.topLift.set(.3)
+            self.wristMotor.set(.1)
         elif self.gamepad.getRawButton(6):
-            self.topLift.set(-.3)
-        else:
-            self.topLift.set(0)'''
+            self.wristMotor.set(-.1)
+        elif self.gamepad.getRawButton(5) == False and self.gamepad.getRawButton(6) == False:
+            self.wrist.set(0)
         
-        '''#Climbing Controls
+        #Climbing Controls
         if self.stick1.getRawButton(8):
             if UtilityFunctions.encoderCompare(self, self.backEncoder, self.encoderMotor) == True and self.backEncoder.get() <= 247000:
                 self.climberBack.set(0.35)
@@ -181,52 +184,34 @@ class MyRobot(wpilib.TimedRobot):
         if self.stick2.getRawButton(11):
             print('Back: ' + str(self.backEncoder.get()))
             print('Left: ' + str(self.leftEncoder.get()))
-            print('Right: ' + str(self.rightEncoder.get()))'''
-        '''if self.stick1.getRawButton(8):
-            liftAllNumInches(MyRobot, 6, 1, .1) 
-        elif self.stick1.getRawButton(9):
-            self.climberWheel.set(1)
-        elif self.stick2.getRawButton(8):
-            liftFrontNumInches(MyRobot, 6, -1, .1)
-        elif self.stick2.getRawButton(9):
-            liftBackNumInches(MyRobot, 6, -1, .1)
-        else:
-            self.climberWheel.set(0)
-
-        if self.stick1.getRawButton(6):
-            liftAllNumInches(MyRobot, 19, 1, .1) 
-        elif self.stick1.getRawButton(5):
-            self.climberWheel.set(1)
-        elif self.stick2.getRawButton(6):
-            liftFrontNumInches(MyRobot, 19, -1, .1)
-        elif self.stick2.getRawButton(5):
-            liftBackNumInches(MyRobot, 19, -1, .1)
-        else:
-            self.climberWheel.set(0)'''
+            print('Right: ' + str(self.rightEncoder.get()))
 
         if self.stick1.getRawButton(1): #Hold the button for it to work or it will just keep going 
-            if self.armEncoder.get() <= armHeightHighG:
-                self.randomMotor.set(.1)
-            elif self.armEncoder.get() >= armHeightLowG:
-                self.randomMotor.set(0)
-                print('Foward: ' + str(self.armEncoder.get()))
-                if self.wristEncoder.get() <= 14300:
+            #To bring the arm and hand from starting position
+            if self.armEncoder.get() <= self.armHeightHighG: 
+                self.armMotor1.set(.1)
+                self.armMotor2.set(.1)
+            elif self.armEncoder.get() >= self.armHeightLowG:
+                self.armMotor1.set(0)
+                self.armMotor2.set(0)
+                if self.wristEncoder.get() <= 14300: #bring the hand up 
                     self.wristMotor.set(.1)
                 elif self.wristEncoder.get() >= 14200:
                     self.wristMotor.set(0.09)
-                    if self.armEncoder.get() >= armHeightHighS
+                    if self.armEncoder.get() >= self.armHeightHighS: #lower the arm to 1st position
+                        self.armMotor1.set(-.1)
+                        self.armMotor2.set(-.1)
+                    elif self.armEncoder.get() <= self.armHeightHighS:
+                        self.armMotor1.set(0)
+                        self.armMotor2.set(0)
 
             #if the height is higher than first position
             elif self.armEncoder.get() >= 13000:
-                self.randomMotor.set(-.1)
+                self.armMotor1.set(-.1)
+                self.armMotor2.set(-.1)
             elif self.armEncoder.get() <= 13000:
-                self.randomMotor.set(0)
-        '''elif self.stick2.getRawButton(1):
-            if not numberEncoder >= 21000 and numberEncoder <=22000:
-                self.randomMotor.set(.1)
-                print('Backwards: ' + str(self.randomEncoder.get()))
-            elif self.numberEncoder >= 21000 and self.numberEncoder <=22000:
-                self.randomMotor.set(0)'''
+                self.armMotor1.set(0)
+                self.armMotor2.set(0)
 
         if self.stick2.getRawButton(1):
             self.armEncoder.reset()
@@ -258,5 +243,4 @@ class MyRobot(wpilib.TimedRobot):
             
 if __name__ == '__main__':
     wpilib.run(MyRobot)
-
 
