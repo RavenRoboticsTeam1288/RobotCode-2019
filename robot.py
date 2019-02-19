@@ -11,7 +11,7 @@ class MyRobot(wpilib.TimedRobot):
     def robotInit(self):
 
         self.sd = NetworkTables.getTable('SmartDashboard')
-        #wpilib.CameraServer.launch('vision.py:main')
+        wpilib.CameraServer.launch('vision.py:main')
 
         #Joystick/gamepad setup
         self.stick1 = wpilib.Joystick(1) #Right
@@ -47,15 +47,17 @@ class MyRobot(wpilib.TimedRobot):
                                             self.rightBackMotor)
 
         #Encoders Setup
-        self.backEncoder = wpilib.Counter(2)
-        self.leftEncoder = wpilib.Counter(4)
-        self.rightEncoder = wpilib.Counter(0)
-        self.armEncoder = wpilib.Encoder(0, 1)
+        self.backEncoder = wpilib.Encoder(2, 3)
+        self.leftEncoder = wpilib.Encoder(4, 5)
+        self.rightEncoder = wpilib.Encoder(0, 1)
+        self.armEncoder = wpilib.Encoder(6, 7)
+        self.wristEncoder = wpilib.Encoder(8,9)
 
         self.backEncoder.reset()
         self.leftEncoder.reset()
         self.rightEncoder.reset()
         self.armEncoder.reset()
+        self.wristEncoder.reset()
 
         #Misc Variables Setup
         self.intakeSpeed = 0.1
@@ -72,11 +74,18 @@ class MyRobot(wpilib.TimedRobot):
         self.armHeightLow2 = 23600
         self.armHeightHigh3 = 32700
         self.armHeightLow3 = 32800
-        
-        
-
-        #initialize the gyro (ANALOG INPUT)
-        #self.gyro = wpilib.ADXRS450_Gyro()
+        self.extend19 = 247000
+        self.extend6 = 78000
+        self.fullRetract = 0
+        self.extendSpeed = .35
+        self.retactSpeed = -.25
+        self.climbWheelSpeed = .1
+        self.positionWrist = 'Start'
+        self.position = 'Start'
+        #The position the arm/wrist is currently in. Either that being start, 1st, 2nd, 3rd, or manual
+        self.drivingArm = False
+        #When the arm isn't driving then the value is False but when the robot is driving then the value is true
+        self.drivingWrist = False
 
         
     def autonomousPeriodic(self):
@@ -112,7 +121,7 @@ class MyRobot(wpilib.TimedRobot):
         self.robotDrive.mecanumDrive_Cartesian(-stick2_X, -stick2_Y, -stick1_X, 0)
 
         #Ball intake/outtake
-        if self.stick2.getRawButton(2):# and not self.limit.get():
+        if self.stick2.getRawButton(1):# and not self.limit.get():
             self.rightFly.set(self.intakeSpeed)
             self.leftFly.set(-self.intakeSpeed)
         elif self.stick1.getRawButton(1):
@@ -123,72 +132,116 @@ class MyRobot(wpilib.TimedRobot):
             self.leftFly.set(0)
 
         #Arm Elevation
-        if self.gamepad.getRawButton(8): #Up
+        if self.gamepad.getRawButton(5): #Up
+            self.drivingArm = True
             self.armMotor1.set(self.armSpeed)
             self.armMotor2.set(self.armSpeed)
-        elif self.gamepad.getRawButton(7): #Down
+            self.position = 'Manual'
+            self.setPointArm = self.armEncoder.get()
+        elif self.gamepad.getRawButton(6): #Down
+            self.drivingArm = True
             self.armMotor1.set(-self.armSpeed)
             self.armMotor2.set(-self.armSpeed)
-        elif self.gamepad.getRawButton(8) == False and self.gamepad.getRawButton(7) == False: #Stop
+            self.position = 'Manual'
+            self.setPointArm = self.armEncoder.get()
+        elif self.gamepad.getRawButton(5) == False and self.gamepad.getRawButton(6) == False: #Stop
             self.armMotor1.set(0)
             self.armMotor2.set(0)
+            self.drivingArm = False
+
+        #Arm Stablizer
+        if self.position == 'Manual' and self.drivingArm == False: 
+            self.error = self.setPointArm - self.armEncoder.get()
+            self.speed = self.error * .005 #.005 is the z. If the hand/arm is moving more up and down then lower the Z
+            #If it is still dropping then increase z
+            #Eqaution: speed = error * z
+            self.armMotor1(self.speed)
+            self.armMotor2(self.speed)
 
 
         #Hook
-        if self.gamepad.getRawButton(5):
+        if self.gamepad.getRawButton(7):
+            self.drivingWrist = True
             self.wristMotor.set(.1)
-        elif self.gamepad.getRawButton(6):
+            self.setPointWrist = self.wristEncoder.get()
+            self.positionWrist = 'Manual'
+        elif self.gamepad.getRawButton(8):
+            self.drivingWrist = True
             self.wristMotor.set(-.1)
-        elif self.gamepad.getRawButton(5) == False and self.gamepad.getRawButton(6) == False:
-            self.wrist.set(0)
+            self.setPointWrist = self.wristEncoder.get()
+            self.positionWrist= 'Manual'
+        elif not self.gamepad.getRawButton(7) and self.gamepad.getRawButton(8):
+            self.wristMotor.set(0)
+            self.drivingWrist = False
+
+        #Hook Stablizer
+        if self.positionWrist == 'Manual' and self.drivingWrist == False:
+            self.error2 = self.setPointWrist - self.wristEncoder.get()
+            self.speed2 = self.error2 * .005
+            self.wristMotor.set(speed2)
         
         #Climbing Controls
+        
         if self.stick1.getRawButton(8):
-            if UtilityFunctions.encoderCompare(self, self.backEncoder, self.encoderMotor) == True and self.backEncoder.get() <= 247000:
-                self.climberBack.set(0.35)
+            if UtilityFunctions.encoderCompareUp(self, self.backEncoder, self.encoderMotor) == True and self.backEncoder.get() <= self.fullExtend:
+                self.climberBack.set(self.extendSpeed)
             else:
                 self.climberBack.set(0)
-            if UtilityFunctions.encoderCompare(self, self.leftEncoder, self.encoderMotor) == True and self.leftEncoder.get() <= 247000:
-                self.climberLeft.set(-0.35)
+            if UtilityFunctions.encoderCompareUp(self, self.leftEncoder, self.encoderMotor) == True and self.leftEncoder.get() <= self.fullExtend:
+                self.climberLeft.set(self.extendSpeed)
             else:
                 self.climberLeft.set(0)
-            if UtilityFunctions.encoderCompare(self, self.rightEncoder, self.encoderMotor) == True and self.rightEncoder.get() <= 247000:
-                self.climberRight.set(0.35)
+            if UtilityFunctions.encoderCompareUp(self, self.rightEncoder, self.encoderMotor) == True and self.rightEncoder.get() <= self.fullExtend:
+                self.climberRight.set(self.extendSpeed)
             else:
                 self.climberRight.set(0)
-
+                
         elif self.stick2.getRawButton(8):
-            if UtilityFunctions.encoderCompare(self, self.backEncoder, self.encoderMotor) == True and self.backEncoder.get() <= 247000:
-                self.climberBack.set(-0.25)
+            '''if UtilityFunctions.encoderCompareDown(self, self.backEncoder, self.encoderMotor) == True and self.backEncoder.get() >= self.fullRetract:
+                self.climberBack.set(self.retactSpeed)
             else:
-                self.climberBack.set(0)
-            if UtilityFunctions.encoderCompare(self, self.leftEncoder, self.encoderMotor) == True and self.backEncoder.get() <= 247000:
-                self.climberLeft.set(0.25)
+                self.climberBack.set(0)'''
+            if UtilityFunctions.encoderCompareDown(self, self.leftEncoder, self.encoderMotor) == True and self.backEncoder.get() >= self.fullRetract:
+                self.climberLeft.set(self.retactSpeed)
             else:
                 self.climberLeft.set(0)
-            if UtilityFunctions.encoderCompare(self, self.rightEncoder, self.encoderMotor) == True and self.backEncoder.get() <= 247000:
-                self.climberRight.set(-0.25)
+            if UtilityFunctions.encoderCompareDown(self, self.rightEncoder, self.encoderMotor) == True and self.backEncoder.get() >= self.fullRetract:
+                self.climberRight.set(self.retactSpeed)
             else:
                 self.climberRight.set(0)
+                
+        elif self.stick2.getRawButton(9):
+            if self.backEncoder.get() >= self.fullRetract:
+                self.climberBack.set(self.retactSpeed)
+            else:
+                self.climberBack.set(0)
+                
         else:
             self.climberRight.set(0)
             self.climberLeft.set(0)
             self.climberBack.set(0)
-
+            
+        if self.stick1.getRawButton(9):
+            self.climberWheel.set(self.climbWheelSpeed)
+        else:
+            self.climberWheel.set(0)
+            
         if self.stick1.getRawButton(11):
             print('RESET')
             self.backEncoder.reset()
             self.leftEncoder.reset()
             self.rightEncoder.reset()
-
+            
         if self.stick2.getRawButton(11):
             print('Back: ' + str(self.backEncoder.get()))
             print('Left: ' + str(self.leftEncoder.get()))
             print('Right: ' + str(self.rightEncoder.get()))
 
-        if self.stick1.getRawButton(1): #Hold the button for it to work or it will just keep going 
+
+        if self.gamepad.getRawButton(1): #Hold the button for it to work or it will just keep going 
             #To bring the arm and hand from starting position
-            if self.armEncoder.get() <= self.armHeightHighG: 
+            self.driving = True
+            if self.armEncoder.get() <= self.armHeightHighG:
                 self.armMotor1.set(.1)
                 self.armMotor2.set(.1)
             elif self.armEncoder.get() >= self.armHeightLowG:
@@ -202,30 +255,33 @@ class MyRobot(wpilib.TimedRobot):
                         self.armMotor1.set(-.1)
                         self.armMotor2.set(-.1)
                     elif self.armEncoder.get() <= self.armHeightHighS:
+                        self.position = 'First'
+                        self.setPoint = self.armEncoder.get()
                         self.armMotor1.set(0)
                         self.armMotor2.set(0)
+                        self.driving = False
 
             #if the height is higher than first position
             elif self.armEncoder.get() >= 13000:
                 self.armMotor1.set(-.1)
                 self.armMotor2.set(-.1)
             elif self.armEncoder.get() <= 13000:
+                self.position = 'First'
+                self.setPoint = self.armEncoder.get()
                 self.armMotor1.set(0)
                 self.armMotor2.set(0)
+                self.driving = False
 
-        if self.stick2.getRawButton(1):
-            self.armEncoder.reset()
-            print(str(self.armEncoder.get()))
-    
-        '''if self.stick1.getRawButton(1):
-            print('Foward: ' + str(self.randomEncoder.get()))'''
-
+        if self.driving == False and self.position == 'First':
+            self.error = self.setPoint - self.armEncoder.get()
+            self.speed = self.error * .005 #.005 is the z. If the hand/arm is moving more up and down then lower the Z
+            #If it is still dropping then increase z
+            #Eqaution: speed = error * z
+            self.armMotor1(self.speed)
+            self.armMotor2(self.speed)
        
         #motor is reverse so -1 is clockwise and +1 is counter clockwise
         
-
-            
-
         #Climb 2 Electric Boogaloo
         '''
         if self.stick1.getRawButton(*):
@@ -233,14 +289,6 @@ class MyRobot(wpilib.TimedRobot):
         '''
 
 
-        #Two modes
-            #if self.gamepad.getRawButton(3):
-            #angle = robot.gyro.getAngle()
-            #angle = angle % 360
-            
-
-
             
 if __name__ == '__main__':
     wpilib.run(MyRobot)
-
