@@ -300,7 +300,7 @@ class UtilityFunctions():
                     motorMove.update(E=True)
             print(motorMove)'''
 
-    def encoderCompare(robot, encoder, encoderList):
+    def encoderCompareUp(robot, encoder, encoderList):
         print(encoder)
         for e in encoderList:
             if e != encoder:
@@ -309,5 +309,37 @@ class UtilityFunctions():
                     return False
                 else:
                     return True
+                    
+    def encoderCompareDown(robot, encoder, encoderList):
+        print(encoder)
+        for e in encoderList:
+            if e != encoder:
+                if e.get() - encoder.get() > 5000:
+                    print("Stop Motor: " + str(e))
+                    return False
+                else:
+                    return True
 
-
+    def getHeight(robot, targetHeight):
+        targetHeightHigh = targetHeight + 100
+        targetHeightLow = targetHeight - 100
+        if self.armEncoder.get() <= targetHeightHigh:
+            self.drivingArm = True
+            self.armMotor1.set(.1)
+            self.armMotor2.set(.1)
+            elif self.armEncoder.get() >= targetHeightLow:
+                self.armMotor1.set(0)
+                self.armMotor2.set(0)
+                self.drivingArm = False
+                return False
+        elif self.armEncoder.get() >= targetHeightHigh:
+            self.drivingArm = True
+            self.armMotor1.set(-.1)
+            self.armMotor2.set(-.1)
+            elif self.armEncoder.get() <= targetHeightHigh:
+                self.armMotor1.set(0)
+                self.armMotor2.set(0)
+                self.drivingArm = False
+                return False
+        else:
+            return True
